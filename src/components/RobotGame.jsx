@@ -14,7 +14,7 @@ const FACE_SRC = { sx: 0, sy: 0, s: 512 };
 
 const GRAVITY        = 0.22;
 const JUMP_FORCE     = -7;
-const MAX_SPEED      = 1.8;
+const MAX_SPEED      = 2.16;
 const FRICTION       = 0.82;
 const BLOCK_H        = 8;
 const SPAWN_INTERVAL = 22;
@@ -466,8 +466,8 @@ const RobotGame = ({ active }) => {
       const right = keys.has("ArrowRight") || keys.has("KeyD");
       const jump  = keys.has("Space") || keys.has("ArrowUp") || keys.has("KeyW");
 
-      if (left)       a.vx = Math.max(a.vx - 0.32, -MAX_SPEED);
-      else if (right) a.vx = Math.min(a.vx + 0.32,  MAX_SPEED);
+      if (left)       a.vx = Math.max(a.vx - 0.38, -MAX_SPEED);
+      else if (right) a.vx = Math.min(a.vx + 0.38,  MAX_SPEED);
       else            a.vx *= FRICTION;
 
       if (jump && a.onGround && !jumpLatchRef.current) {

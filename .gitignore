@@ -27,3 +27,4 @@ dist-ssr
 # local reference clone
 gazi-v2-reference/
 .claude/
+.vercel
