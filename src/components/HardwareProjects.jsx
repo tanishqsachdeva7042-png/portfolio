@@ -7,26 +7,14 @@ import FadeInSection from "./FadeInSection";
 import { useNavigate } from "react-router-dom";
 
 const hardwareProjects = {
-  "Custom Build PC": {
-    desc: "A high-performance white-themed PC build inspired by Rei Ayanami from Neon Genesis Evangelion.",
-    techStack: "AMD Ryzen 7 5800X, RTX 4070 Ti, NZXT N7 B550, HYTE Y60",
-    link: "/hardware/pc",
-    image: "/assets/hardware/pc/images/cover.png"
+  "Mystery Build #1": {
+    desc: "A hands-on project is on its way. Parts have allegedly been ordered.",
+    techStack: "Coming soon",
   },
-  "LED Sound Reactive Bracelet": {
-    desc: "A wearable, sound-reactive LED bracelet that pulses to music in real-time, designed for music festivals.",
-    techStack: "RP2040, WS2812B, MAX4466, LiPo",
-    link: "/hardware/led-bracelet",
-    image: "/assets/hardware/led-bracelet/cover.PNG"
+  "Mystery Build #2": {
+    desc: "This slot is reserved for the second great tinkering adventure.",
+    techStack: "In the works",
   },
-  "Grass Cyberdeck": {
-    desc: "A Raspberry Pi retro gaming console built inside a wooden keepsake box, decorated with preserved moss to look like a tiny terrarium.",
-    techStack: "Raspberry Pi 3B+, PiSugar 3 Plus, Hosyond 5\" DSI, RetroPie",
-    link: "/hardware/grass-cyberdeck",
-    image: "/assets/hardware/grass-cyberdeck/cover.PNG",
-    imageStyle: { objectFit: "contain", padding: "12px" },
-    badge: { text: "Teen Vogue feature", href: "https://www.teenvogue.com/story/diy-cyberdecks-newest-analog-trend-taking-social-media" }
-  }
 };
 
 const HardwareProjects = () => {
@@ -45,7 +33,7 @@ const HardwareProjects = () => {
               <FadeInSection key={i} delay={(i + 1) * 100 + "ms"}>
                 <li
                   className={`projects-card ${project.image ? "transparent-card" : ""}`}
-                  onClick={() => navigate(project.link)}
+                  onClick={() => project.link && navigate(project.link)}
                 >
                   {project.image ? (
                     <div className="project-image-container">
@@ -72,7 +60,9 @@ const HardwareProjects = () => {
                     </a>
                   )}
                   <div className="card-desc">{project.desc}</div>
-                  <div className="full-log-link">Full project log</div>
+                  {project.link && (
+                    <div className="full-log-link">Full project log</div>
+                  )}
                   <div className="card-tech">{project.techStack}</div>
                 </li>
               </FadeInSection>
