@@ -4,6 +4,34 @@ import { asciiData } from "../assets/asciiData";
 // Module-level cache to persist between remounts
 const memoryCache = {};
 
+// Famous movie lines, written across the portrait in genuine braille.
+const QUOTES = [
+  "may the force be with you",
+  "ill be back",
+  "why so serious",
+  "kitne aadmi the",
+  "picture abhi baaki hai mere dost",
+  "carpe diem",
+  "to infinity and beyond",
+  "heres looking at you kid",
+  "houston we have a problem",
+  "mogambo khush hua",
+  "im the king of the world",
+  "life is like a box of chocolates",
+];
+
+// Standard 6-dot braille cell for each letter (dots 1-6 -> bits 0x01-0x20)
+const BRAILLE_BITS = {
+  a: 0x01, b: 0x03, c: 0x09, d: 0x19, e: 0x11, f: 0x0b, g: 0x1b,
+  h: 0x13, i: 0x0a, j: 0x1a, k: 0x05, l: 0x07, m: 0x0d, n: 0x1d,
+  o: 0x15, p: 0x0f, q: 0x1f, r: 0x17, s: 0x0e, t: 0x1e, u: 0x25,
+  v: 0x27, w: 0x3a, x: 0x2d, y: 0x3d, z: 0x35,
+};
+
+// The letter stream the particles spell out, in reading order (row-major).
+const QUOTE_SEQ = QUOTES.join(" ").replace(/[^a-z]/g, "");
+const toBraille = (ch) => String.fromCharCode(0x2800 + BRAILLE_BITS[ch]);
+
 const calculateSize = (width) => {
   if (width <= 480) {
     return Math.min(220, width - 40);
@@ -22,6 +50,20 @@ const AsciiPortrait = () => {
   const startTimeRef = useRef(null);
   const [size, setSize] = useState(() => calculateSize(window.innerWidth));
   const [dataReady, setDataReady] = useState(false);
+  const [revealed, setRevealed] = useState(false);
+  const revealRef = useRef({ mode: "braille", prev: "braille", t0: 0 });
+
+  const toggleReveal = () => {
+    setRevealed((r) => {
+      const next = !r;
+      revealRef.current = {
+        mode: next ? "plain" : "braille",
+        prev: next ? "braille" : "plain",
+        t0: performance.now(),
+      };
+      return next;
+    });
+  };
 
   // ASCII character set from sparse to dense
   const chars = " .:-=+*#%@".split("");
@@ -37,20 +79,24 @@ const AsciiPortrait = () => {
 
   const createParticlesFromRaw = (rawParticles, isMobileSize) => {
     const fontSize = isMobileSize ? 5 : 7;
-    return rawParticles.map((p) => ({
-      x: p.x + (Math.random() - 0.5) * 400,
-      y: p.y + (Math.random() - 0.5) * 400,
-      targetX: p.x,
-      targetY: p.y,
-      vx: 0,
-      vy: 0,
-      char: p.char,
-      fontSize: fontSize,
-      baseAlpha: p.alpha,
-      currentAlpha: 0,
-      delay: Math.random() * 0.4,
-      shimmer: Math.random() * Math.PI * 2,
-    }));
+    return rawParticles.map((p, idx) => {
+      const letter = QUOTE_SEQ[idx % QUOTE_SEQ.length];
+      return {
+        x: p.x + (Math.random() - 0.5) * 400,
+        y: p.y + (Math.random() - 0.5) * 400,
+        targetX: p.x,
+        targetY: p.y,
+        vx: 0,
+        vy: 0,
+        char: toBraille(letter),
+        plain: letter,
+        fontSize: fontSize,
+        baseAlpha: p.alpha,
+        currentAlpha: 0,
+        delay: Math.random() * 0.4,
+        shimmer: Math.random() * Math.PI * 2,
+      };
+    });
   };
 
   const processImage = (img, targetSize) => {
@@ -171,7 +217,10 @@ const AsciiPortrait = () => {
 
       const isMobileSize = size <= 280;
       const fontSize = isMobileSize ? 5 : 7;
-      ctx.font = `${fontSize}px monospace`;
+      const rv = revealRef.current;
+      const sinceFlip = (performance.now() - rv.t0) / 1000;
+      // braille cells are visually smaller than letters, draw them a bit larger
+      ctx.font = `${rv.mode === "plain" ? fontSize + 1 : fontSize + 2}px monospace`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
@@ -232,8 +281,11 @@ const AsciiPortrait = () => {
         p.x += p.vx;
         p.y += p.vy;
 
+        // cascading glyph flip when toggling decode/encode
+        const activeMode = sinceFlip > p.delay ? rv.mode : rv.prev;
+        const glyph = activeMode === "plain" ? p.plain : p.char;
         ctx.fillStyle = `rgba(100, 255, 218, ${p.currentAlpha})`;
-        ctx.fillText(p.char, p.x, p.y);
+        ctx.fillText(glyph, p.x, p.y);
       });
     };
 
@@ -276,16 +328,28 @@ const AsciiPortrait = () => {
   }, [size, dataReady]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="simulation-container"
-      style={{
-        width: `${size}px`,
-        height: `${size}px`,
-        cursor: "crosshair",
-        touchAction: "none",
-      }}
-    />
+    <div className="ascii-wrap">
+      <canvas
+        ref={canvasRef}
+        className="simulation-container"
+        style={{
+          width: `${size}px`,
+          height: `${size}px`,
+          cursor: "crosshair",
+          touchAction: "none",
+        }}
+      />
+      <button
+        className={`braille-toggle${revealed ? " braille-toggle--on" : ""}`}
+        onClick={toggleReveal}
+        title={revealed ? "back to braille" : "decode the braille"}
+      >
+        {revealed ? "⠑⠝⠉⠕⠙⠑" : "decode"}
+        <span className="braille-toggle-hint">
+          {revealed ? "encode" : "⠙⠑⠉⠕⠙⠑"}
+        </span>
+      </button>
+    </div>
   );
 };
 
