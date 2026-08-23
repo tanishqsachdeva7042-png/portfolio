@@ -365,11 +365,7 @@ const AsciiPortrait = () => {
       <button
         className={`braille-toggle${revealed ? " braille-toggle--on" : ""}`}
         onClick={toggleReveal}
-        data-tip={
-          revealed
-            ? "back to braille"
-            : "the dots are famous movie lines — decode them"
-        }
+        data-tip={revealed ? "back to braille" : "it's braille!!"}
       >
         {revealed ? "⠑⠝⠉⠕⠙⠑" : "decode"}
         <span className="braille-toggle-hint">
