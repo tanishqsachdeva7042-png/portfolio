@@ -81,6 +81,11 @@ const AsciiPortrait = () => {
     const fontSize = isMobileSize ? 5 : 7;
     return rawParticles.map((p, idx) => {
       const letter = QUOTE_SEQ[idx % QUOTE_SEQ.length];
+      // recover brightness from the stored alpha (alpha = 0.4 + b * 0.6),
+      // then re-map with more contrast so facial features read through
+      // the uniform braille cells
+      const brightness = Math.min(1, Math.max(0, (p.alpha - 0.4) / 0.6));
+      const contrast = Math.pow(brightness, 1.35);
       return {
         x: p.x + (Math.random() - 0.5) * 400,
         y: p.y + (Math.random() - 0.5) * 400,
@@ -91,7 +96,8 @@ const AsciiPortrait = () => {
         char: toBraille(letter),
         plain: letter,
         fontSize: fontSize,
-        baseAlpha: p.alpha,
+        baseAlpha: 0.2 + contrast * 0.8,
+        sizeBucket: contrast < 0.3 ? 0 : contrast < 0.65 ? 1 : 2,
         currentAlpha: 0,
         delay: Math.random() * 0.4,
         shimmer: Math.random() * Math.PI * 2,
@@ -219,8 +225,9 @@ const AsciiPortrait = () => {
       const fontSize = isMobileSize ? 5 : 7;
       const rv = revealRef.current;
       const sinceFlip = (performance.now() - rv.t0) / 1000;
-      // braille cells are visually smaller than letters, draw them a bit larger
-      ctx.font = `${rv.mode === "plain" ? fontSize + 1 : fontSize + 2}px monospace`;
+      // brighter particles draw larger; glyphs are bucketed so the font
+      // only changes three times per frame
+      const buckets = [[], [], []];
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
@@ -283,9 +290,25 @@ const AsciiPortrait = () => {
 
         // cascading glyph flip when toggling decode/encode
         const activeMode = sinceFlip > p.delay ? rv.mode : rv.prev;
-        const glyph = activeMode === "plain" ? p.plain : p.char;
-        ctx.fillStyle = `rgba(100, 255, 218, ${p.currentAlpha})`;
-        ctx.fillText(glyph, p.x, p.y);
+        buckets[p.sizeBucket || 0].push([
+          activeMode === "plain" ? p.plain : p.char,
+          p.x,
+          p.y,
+          p.currentAlpha,
+        ]);
+      });
+
+      // braille cells are visually smaller than letters, draw them larger
+      const sizes =
+        rv.mode === "plain"
+          ? [fontSize, fontSize + 1, fontSize + 2]
+          : [fontSize + 1, fontSize + 2, fontSize + 3];
+      buckets.forEach((bucket, bi) => {
+        ctx.font = `${sizes[bi]}px monospace`;
+        bucket.forEach(([glyph, x, y, alpha]) => {
+          ctx.fillStyle = `rgba(100, 255, 218, ${alpha})`;
+          ctx.fillText(glyph, x, y);
+        });
       });
     };
 
@@ -342,7 +365,11 @@ const AsciiPortrait = () => {
       <button
         className={`braille-toggle${revealed ? " braille-toggle--on" : ""}`}
         onClick={toggleReveal}
-        title={revealed ? "back to braille" : "decode the braille"}
+        data-tip={
+          revealed
+            ? "back to braille"
+            : "the dots are famous movie lines — decode them"
+        }
       >
         {revealed ? "⠑⠝⠉⠕⠙⠑" : "decode"}
         <span className="braille-toggle-hint">

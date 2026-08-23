@@ -25,6 +25,7 @@
 }
 
 .braille-toggle {
+  position: relative;
   background: transparent;
   border: 1px solid var(--lightest-navy);
   color: var(--slate);
@@ -38,6 +39,32 @@
   align-items: center;
   gap: 10px;
   transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+/* instant tooltip — no native title delay */
+.braille-toggle::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(3px);
+  background: #112240;
+  border: 1px solid var(--lightest-navy);
+  color: var(--green-bright);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s, transform 0.1s;
+  z-index: 5;
+}
+
+.braille-toggle:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 .braille-toggle-hint {
