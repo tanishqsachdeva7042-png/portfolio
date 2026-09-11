@@ -586,8 +586,8 @@ const RobotGame = ({ active }) => {
 
       {gameStatus === "won" && (
         <div className="robot-game-status robot-game-status--won">
-          <div className="robot-game-status-title">coconut haul complete</div>
-          <div className="robot-game-status-sub">all {CELL_COUNT} coconuts collected</div>
+          <div className="robot-game-status-title">you are now a coconut baron</div>
+          <div className="robot-game-status-sub">your monopoly on coconuts is now complete</div>
           <button className="robot-game-status-btn" onClick={restart}>play again</button>
         </div>
       )}
