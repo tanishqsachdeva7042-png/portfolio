@@ -14,7 +14,7 @@ const FACE_SRC = { sx: 0, sy: 0, s: 512 };
 
 const GRAVITY        = 0.22;
 const JUMP_FORCE     = -7;
-const MAX_SPEED      = 2.16;
+const MAX_SPEED      = 2.592;
 const FRICTION       = 0.82;
 const BLOCK_H        = 8;
 const SPAWN_INTERVAL = 22;
