@@ -177,7 +177,16 @@ function drawCoconut(ctx, ex, ey, scrollY, idx) {
   ctx.restore();
 }
 
-function generateCellLayout(nb, vw, avoidZones = []) {
+const ZONE_DESIGN_H = 4160;
+const ZONE_FRACTIONS = [
+  [400,  620 ],
+  [1000, 1280],
+  [1780, 2100],
+  [2700, 3060],
+  [3640, 4160],
+];
+
+function generateCellLayout(nb, vw, avoidZones = [], playableH = ZONE_DESIGN_H) {
   const clearZone = (docY) => {
     let y = docY;
     for (let pass = 0; pass < 8; pass++) {
@@ -191,13 +200,9 @@ function generateCellLayout(nb, vw, avoidZones = []) {
   const cLeft  = Math.max(0, (vw - 1000) / 2);
   const cRight = Math.min(vw - 40, cLeft + 1000);
 
-  const yZones = [
-    [nb + 400,  nb + 620 ],
-    [nb + 1000, nb + 1280],
-    [nb + 1780, nb + 2100],
-    [nb + 2700, nb + 3060],
-    [nb + 3640, nb + 4160],
-  ];
+  // shrink the zone spread to fit shorter pages so every coconut stays reachable
+  const scale  = Math.max(0.5, Math.min(1, (playableH - 250) / ZONE_DESIGN_H));
+  const yZones = ZONE_FRACTIONS.map(([a, b]) => [nb + a * scale, nb + b * scale]);
 
   const xTiers = [
     50,
@@ -323,7 +328,8 @@ const RobotGame = ({ active }) => {
       return y;
     };
 
-    const { cells, extraLedges } = generateCellLayout(nb, canvas.width, allDomZones);
+    const playableH = document.body.scrollHeight - nb;
+    const { cells, extraLedges } = generateCellLayout(nb, canvas.width, allDomZones, playableH);
     cellsRef.current = cells;
 
     const mkS = (b) => ({ ...b, isSpawn: false, isGoal: false, alpha: 0, revealed: false });
